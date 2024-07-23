@@ -49,7 +49,6 @@ class ViewController: UIViewController {
               
     }
 
-
 }
 
 extension ViewController: UICollectionViewDelegate , UICollectionViewDataSource , UICollectionViewDelegateFlowLayout {
@@ -61,15 +60,30 @@ extension ViewController: UICollectionViewDelegate , UICollectionViewDataSource 
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyCell", for: indexPath) as? MyCell else {
             return UICollectionViewCell()
         }
+        //⬇️ 기존에 셀에다가 바로 했던것을 글로벌큐에 보내면서 비동기처리 해보겠음.
+        cell.imgView.image = nil // 우선 처음 셀에는 이미지를 부여하지 않고, 이후에 큐로 보내버릴거임.
         
-        if let data = try? Data(contentsOf: urls[indexPath.item]),
-           let img = UIImage(data: data) {
-            cell.imgView.image = img
-        } else {
-            cell.imgView.image = nil
+        DispatchQueue.global().async { [weak self] in
+            guard let self = self else { return }
+            let url = self.urls[indexPath.item]
+            guard let data = try? Data(contentsOf: urls[indexPath.item]),
+                  let img = UIImage(data: data) else { return }
+            
+            DispatchQueue.main.async {
+                cell.imgView.image = img
+            }
+            
         }
-           
         
+        
+//        if let data = try? Data(contentsOf: urls[indexPath.item]),
+//           let img = UIImage(data: data) {
+//            cell.imgView.image = img
+//        } else {
+//            cell.imgView.image = nil
+//        }
+//           
+//        
         return cell
     }
     
